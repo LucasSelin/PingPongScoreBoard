@@ -1,17 +1,26 @@
 package br.edu.ifsp.scl.prdm.sc3011879.PingPongScoreBoard
 
 import android.os.Bundle
+import android.os.Parcelable
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import br.edu.ifsp.scl.prdm.sc3011879.PingPongScoreBoard.ui.theme.PingPongScoreBoardTheme
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
+data class Scoreboard(
+    var scoreA : Int = 0,
+    var scoreB : Int = 0
+): Parcelable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,8 +29,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PingPongScoreBoardTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    MainScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -31,17 +39,16 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
+fun MainScreen(modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PingPongScoreBoardTheme {
-        Greeting("Android")
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        RememberScreen()
+        MutableStateScreen()
+        StateFlowScreen()
+        SavedStateScreen()
     }
 }
+
