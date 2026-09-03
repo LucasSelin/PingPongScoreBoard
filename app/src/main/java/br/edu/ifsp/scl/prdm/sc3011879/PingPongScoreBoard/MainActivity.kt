@@ -20,11 +20,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Parcelize
 data class Scoreboard(
@@ -86,6 +87,37 @@ fun Placar(
             Button(onClick = onIncrementB) { Text("+1") }
         }
         Button(onClick = onReset) { Text("Reiniciar partida") }
+    }
+}
+
+@Composable
+fun MutableStateScreen(mutableStateViewModel: MutableStateViewModel = viewModel()) {
+    val uiState = mutableStateViewModel.uiState
+
+    Placar(
+        "2 - ViewModel + mutableStateOf",
+        uiState.scoreA,
+        uiState.scoreB,
+        mutableStateViewModel::incrementA,
+        mutableStateViewModel::incrementB,
+        mutableStateViewModel::reset
+    )
+}
+
+class MutableStateViewModel : ViewModel() {
+    var uiState by mutableStateOf(Scoreboard())
+        private set
+
+    fun incrementA() {
+        uiState = uiState.copy(scoreA = uiState.scoreA + 1)
+    }
+
+    fun incrementB() {
+        uiState = uiState.copy(scoreB = uiState.scoreB + 1)
+    }
+
+    fun reset() {
+        uiState = Scoreboard()
     }
 }
 
