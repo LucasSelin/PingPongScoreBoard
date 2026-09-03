@@ -26,6 +26,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+
 
 @Parcelize
 data class Scoreboard(
@@ -120,5 +126,32 @@ class MutableStateViewModel : ViewModel() {
         uiState = Scoreboard()
     }
 }
+
+
+@Composable
+fun StateFlowScreen(stateFlowViewModel: StateFlowViewModel = viewModel()) {
+    val uiState by stateFlowViewModel.uiState.collectAsState()
+
+    Placar(
+        "3 - ViewModel + StateFlow",
+        uiState.scoreA,
+        uiState.scoreB,
+        stateFlowViewModel::incrementA,
+        stateFlowViewModel::incrementB,
+        stateFlowViewModel::reset
+    )
+}
+
+class StateFlowViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow(Scoreboard())
+    val uiState: StateFlow<Scoreboard> = _uiState.asStateFlow()
+
+    fun incrementA() = _uiState.update { it.copy(scoreA = it.scoreA + 1) }
+
+    fun incrementB() = _uiState.update { it.copy(scoreB = it.scoreB + 1) }
+
+    fun reset() = _uiState.update { Scoreboard() }
+}
+
 
 
