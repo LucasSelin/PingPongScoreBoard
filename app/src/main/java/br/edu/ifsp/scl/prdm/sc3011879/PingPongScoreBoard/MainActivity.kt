@@ -1,43 +1,43 @@
 package br.edu.ifsp.scl.prdm.sc3011879.PingPongScoreBoard
 
 import android.os.Bundle
-import android.os.Parcelable
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import br.edu.ifsp.scl.prdm.sc3011879.PingPongScoreBoard.ui.theme.PingPongScoreBoardTheme
-import kotlinx.parcelize.Parcelize
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
+import br.edu.ifsp.scl.prdm.sc3011879.PingPongScoreBoard.ui.theme.PingPongScoreBoardTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 
 
-@Parcelize
 data class Scoreboard(
     var scoreA : Int = 0,
     var scoreB : Int = 0
-): Parcelable
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +66,17 @@ fun MainScreen(modifier: Modifier = Modifier) {
         MutableStateScreen()
         StateFlowScreen()
         SavedStateScreen()
+    }
+}
+
+@Composable
+fun RememberScreen() {
+    var scoreA by remember { mutableIntStateOf(0) }
+    var scoreB by remember { mutableIntStateOf(0) }
+
+    Placar("1 - remember", scoreA, scoreB, { scoreA++ }, { scoreB++ }) {
+        scoreA = 0
+        scoreB = 0
     }
 }
 
@@ -127,7 +138,6 @@ class MutableStateViewModel : ViewModel() {
     }
 }
 
-
 @Composable
 fun StateFlowScreen(stateFlowViewModel: StateFlowViewModel = viewModel()) {
     val uiState by stateFlowViewModel.uiState.collectAsState()
@@ -153,5 +163,39 @@ class StateFlowViewModel : ViewModel() {
     fun reset() = _uiState.update { Scoreboard() }
 }
 
+@Composable
+fun SavedStateScreen(savedStateViewModel: SavedStateViewModel = viewModel()) {
+    val uiState by savedStateViewModel.uiState.collectAsState()
 
+    Placar(
+        "4 - ViewModel + SavedStateHandle",
+        uiState.scoreA,
+        uiState.scoreB,
+        savedStateViewModel::incrementA,
+        savedStateViewModel::incrementB,
+        savedStateViewModel::reset
+    )
+}
 
+class SavedStateViewModel(val savedStateHandle: SavedStateHandle) : ViewModel() {
+    private companion object {
+        const val SCORE_A_KEY = "scoreA"
+        const val SCORE_B_KEY = "scoreB"
+    }
+    private val _uiState = MutableStateFlow(
+        Scoreboard(savedStateHandle[SCORE_A_KEY] ?: 0, savedStateHandle[SCORE_B_KEY] ?: 0)
+    )
+    val uiState: StateFlow<Scoreboard> = _uiState.asStateFlow()
+
+    fun incrementA() = save { it.copy(scoreA = it.scoreA + 1) }
+
+    fun incrementB() = save { it.copy(scoreB = it.scoreB + 1) }
+
+    fun reset() = save { Scoreboard() }
+
+    private fun save(transform: (Scoreboard) -> Scoreboard) {
+        _uiState.update(transform)
+        savedStateHandle[SCORE_A_KEY] = _uiState.value.scoreA
+        savedStateHandle[SCORE_B_KEY] = _uiState.value.scoreB
+    }
+}
